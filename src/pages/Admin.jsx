@@ -14,6 +14,10 @@ const Admin = () => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [userDetail, setUserDetail] = useState({});
 
+  // axios.get(url, options)
+  // axios.delete(url, options)
+  // axios.post(url, body, options)
+  // axios.put(url, body, options)
   const fetchUsers = async () => {
     try {
       setIsUserListLoading(true);
