@@ -226,3 +226,10 @@ const Admin = () => {
 };
 
 export default Admin;
+
+// 4. Everything in react is
+// a) Component
+// b) Model
+// c) Method
+// d) Package
+// e) NOTW
