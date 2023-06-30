@@ -2,6 +2,8 @@ import MaterialTable from "@material-table/core";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Button, Form, Modal, ModalBody, ModalFooter } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import Loader from "../components/Loader";
 import Sidebar from "../components/Sidebar";
@@ -14,6 +16,7 @@ const Engineer = () => {
     useState(false);
   const [showEngineerModal, setShowEngineerModal] = useState(false);
   const [ticketDetail, setTicketDetail] = useState({});
+  const navigate = useNavigate();
 
   const fetchTickets = async () => {
     try {
@@ -42,14 +45,16 @@ const Engineer = () => {
           },
         }
       );
-
+      toast.success("Successfully updated the ticket details.");
       setShowEngineerModal(false);
       setTicketList(
         ticketList.map((ticket) =>
           ticket.id === ticketDetail.id ? data : ticket
         )
       );
-    } catch (ex) {}
+    } catch (ex) {
+      toast.error("Error while updating the ticket details.");
+    }
   };
 
   const handleRowClick = (event, rowData) => {
@@ -65,7 +70,15 @@ const Engineer = () => {
   };
 
   useEffect(() => {
-    fetchTickets();
+    if (!localStorage.getItem("token")) {
+      navigate("/");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      fetchTickets();
+    }
   }, []);
 
   return (

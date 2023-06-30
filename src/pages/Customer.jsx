@@ -9,6 +9,8 @@ import {
   ModalHeader,
   ModalTitle,
 } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import Loader from "../components/Loader";
 import Sidebar from "../components/Sidebar";
@@ -25,6 +27,7 @@ const Customer = () => {
     useState(false);
   const [showEngineerModal, setShowEngineerModal] = useState(false);
   const [ticketDetail, setTicketDetail] = useState({});
+  const navigate = useNavigate();
 
   const fetchTickets = async () => {
     try {
@@ -36,6 +39,7 @@ const Customer = () => {
       });
       setTicketList(data);
     } catch (ex) {
+      toast.error("Error occured while fetching the list of tickets.");
     } finally {
       setIsAssignedTicketsLoading(false);
     }
@@ -63,12 +67,15 @@ const Customer = () => {
       );
 
       setShowEngineerModal(false);
+      toast.success("Successfully updated the ticket details.");
       setTicketList(
         ticketList.map((ticket) =>
           ticket.id === ticketDetail.id ? data : ticket
         )
       );
-    } catch (ex) {}
+    } catch (ex) {
+      toast.error("Error while updating the ticket details.");
+    }
   };
 
   const handleRowClick = (event, rowData) => {
@@ -90,15 +97,31 @@ const Customer = () => {
       description: ticketCreationData.description,
     };
 
-    await axios.post(`${BASE_URL}/crm/api/v1/tickets`, data, {
-      headers: {
-        "x-access-token": localStorage.getItem("token"),
-      },
-    });
+    try {
+      await axios.post(`${BASE_URL}/crm/api/v1/tickets`, data, {
+        headers: {
+          "x-access-token": localStorage.getItem("token"),
+        },
+      });
+
+      toast.success("Created a new ticket!");
+      setShowCreateTicketModal(false);
+      setTicketCreationData({});
+    } catch (ex) {
+      toast.error("Error while creating a new ticket!");
+    }
   };
 
   useEffect(() => {
-    fetchTickets();
+    if (localStorage.getItem("token")) {
+      fetchTickets();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!localStorage.getItem("token")) {
+      navigate("/");
+    }
   }, []);
 
   return (
@@ -107,12 +130,6 @@ const Customer = () => {
         <Sidebar />
         <div className="col my-4 ">
           <div className="container">
-            <Button
-              variant="primary"
-              onClick={() => setShowCreateTicketModal(true)}
-            >
-              Create ticket
-            </Button>
             <div>
               <h3 className="text-primary text-center">
                 Welcome, {localStorage.getItem("name")}
@@ -164,6 +181,14 @@ const Customer = () => {
                   onRowClick={handleRowClick}
                   title="Tickets created by me"
                   data={ticketList}
+                  actions={[
+                    {
+                      icon: () => <i class="bi bi-plus-circle"></i>,
+                      tooltip: "Create a new ticket",
+                      isFreeAction: true,
+                      onClick: () => setShowCreateTicketModal(true),
+                    },
+                  ]}
                   columns={[
                     { title: "Ticket ID", field: "id" },
                     {

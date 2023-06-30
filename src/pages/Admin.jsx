@@ -2,6 +2,8 @@ import MaterialTable from "@material-table/core";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Button, Form, Modal, ModalBody, ModalFooter } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import Loader from "../components/Loader";
 import Sidebar from "../components/Sidebar";
@@ -13,11 +15,9 @@ const Admin = () => {
   const [isUserListLoading, setIsUserListLoading] = useState(false);
   const [showUserModal, setShowUserModal] = useState(false);
   const [userDetail, setUserDetail] = useState({});
+  const [ticketList, setTicketList] = useState([]);
+  const navigate = useNavigate();
 
-  // axios.get(url, options)
-  // axios.delete(url, options)
-  // axios.post(url, body, options)
-  // axios.put(url, body, options)
   const fetchUsers = async () => {
     try {
       setIsUserListLoading(true);
@@ -28,8 +28,22 @@ const Admin = () => {
       });
       setUserList(data);
     } catch (ex) {
+      toast.error("Error occured while fetching the list of users.");
     } finally {
       setIsUserListLoading(false);
+    }
+  };
+
+  const fetchTickets = async () => {
+    try {
+      const { data } = await axios.get(`${BASE_URL}/crm/api/v1/tickets/all`, {
+        headers: {
+          "x-access-token": localStorage.getItem("token"),
+        },
+      });
+      setTicketList(data);
+    } catch (ex) {
+      toast.error("Error occured while fetching the ticket counts.");
     }
   };
 
@@ -50,14 +64,18 @@ const Admin = () => {
           },
         }
       );
-
+      toast.success("User details updated successfully");
       setUserList(
         userList.map((user) =>
           user.userId === userDetail.userId ? userDetail : user
         )
       );
       setShowUserModal(false);
-    } catch (ex) {}
+    } catch (ex) {
+      toast.error(
+        "Error occured while updating user details. Please try again in a minute."
+      );
+    }
   };
 
   const handleRowClick = (event, rowData) => {
@@ -79,7 +97,21 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
+    if (!localStorage.getItem("token")) {
+      navigate("/");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      fetchUsers();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      fetchTickets();
+    }
   }, []);
 
   return (
@@ -97,21 +129,38 @@ const Admin = () => {
               </p>
 
               <div className="row my-5 mx-2 text-center">
-                <StatusCard cardColor="warning" cardText="Open" cardValue={8} />
+                <StatusCard
+                  cardColor="warning"
+                  cardText="Open"
+                  cardValue={
+                    ticketList.filter((ticket) => ticket.status === "OPEN")
+                      .length
+                  }
+                />
                 <StatusCard
                   cardColor="primary"
                   cardText="In progress"
-                  cardValue={5}
+                  cardValue={
+                    ticketList.filter(
+                      (ticket) => ticket.status === "IN_PROGRESS"
+                    ).length
+                  }
                 />
                 <StatusCard
                   cardColor="success"
                   cardText="Closed"
-                  cardValue={12}
+                  cardValue={
+                    ticketList.filter((ticket) => ticket.status === "CLOSED")
+                      .length
+                  }
                 />
                 <StatusCard
                   cardColor="secondary"
                   cardText="Blocked"
-                  cardValue={3}
+                  cardValue={
+                    ticketList.filter((ticket) => ticket.status === "BLOCKED")
+                      .length
+                  }
                 />
               </div>
               <hr />

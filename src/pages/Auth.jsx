@@ -1,7 +1,8 @@
 import axios from "axios";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import { BASE_URL } from "../constants";
 
@@ -30,6 +31,23 @@ const Auth = () => {
     initialSignupFormValues
   );
 
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      switch (localStorage.getItem("userTypes")) {
+        case "CUSTOMER":
+          navigate("/customer");
+          break;
+        case "ENGINEER":
+          navigate("/engineer");
+          break;
+        case "ADMIN":
+          navigate("/admin");
+          break;
+        default:
+      }
+    }
+  }, []);
+
   const handleLogin = async (event) => {
     event.preventDefault();
 
@@ -49,6 +67,7 @@ const Auth = () => {
       localStorage.setItem("userStatus", data.userStatus);
       localStorage.setItem("token", data.accessToken);
 
+      toast.success("Welcome to the app!");
       switch (data.userTypes) {
         case "CUSTOMER":
           navigate("/customer");
@@ -63,10 +82,10 @@ const Auth = () => {
       }
     } catch (ex) {
       if (ex.message === "APPROVAL PENDING") {
-        setErrorMessage("Admin is yet to approve your sign in request");
+        toast.error("Admin is yet to approve your sign in request");
         return;
       }
-      setErrorMessage(ex.response.data.message);
+      toast.error(ex.response.data.message);
     }
   };
 
@@ -80,7 +99,8 @@ const Auth = () => {
         email: signupFormValues.email,
         userType: signupFormValues.userType,
       });
-      window.location.reload();
+      setShowSignup(false);
+      toast.success("Signup done. Please login with your credentials!");
     } catch (ex) {
       setErrorMessage(ex.response.data.message);
     }
