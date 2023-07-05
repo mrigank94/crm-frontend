@@ -81,6 +81,7 @@ const Auth = () => {
         default:
       }
     } catch (ex) {
+      console.log(ex);
       if (ex.message === "APPROVAL PENDING") {
         toast.error("Admin is yet to approve your sign in request");
         return;

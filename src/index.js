@@ -7,6 +7,14 @@ import App from "./App";
 
 import "./index.css";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+
+axios.interceptors.request.use(function (config) {
+  const token = localStorage.getItem("token");
+  config.headers["x-access-token"] = token;
+
+  return config;
+});
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

@@ -2,13 +2,16 @@ import MaterialTable from "@material-table/core";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { Button, Form, Modal, ModalBody, ModalFooter } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 import Loader from "../components/Loader";
 import Sidebar from "../components/Sidebar";
 import StatusCard from "../components/StatusCard";
+import StatusRow from "../components/StatusRow";
+import WelcomeMsg from "../components/WelcomeMsg";
 import { BASE_URL } from "../constants";
+import useAuth from "../hooks/use-auth";
+import { getTicketCount } from "../utils/utils";
 
 const Admin = () => {
   const [userList, setUserList] = useState([]);
@@ -16,16 +19,12 @@ const Admin = () => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [userDetail, setUserDetail] = useState({});
   const [ticketList, setTicketList] = useState([]);
-  const navigate = useNavigate();
+  useAuth();
 
   const fetchUsers = async () => {
     try {
       setIsUserListLoading(true);
-      const { data } = await axios.get(BASE_URL + "/crm/api/v1/users/", {
-        headers: {
-          "x-access-token": localStorage.getItem("token"),
-        },
-      });
+      const { data } = await axios.get(BASE_URL + "/crm/api/v1/users/");
       setUserList(data);
     } catch (ex) {
       toast.error("Error occured while fetching the list of users.");
@@ -36,11 +35,7 @@ const Admin = () => {
 
   const fetchTickets = async () => {
     try {
-      const { data } = await axios.get(`${BASE_URL}/crm/api/v1/tickets/all`, {
-        headers: {
-          "x-access-token": localStorage.getItem("token"),
-        },
-      });
+      const { data } = await axios.get(`${BASE_URL}/crm/api/v1/tickets/all`);
       setTicketList(data);
     } catch (ex) {
       toast.error("Error occured while fetching the ticket counts.");
@@ -50,20 +45,12 @@ const Admin = () => {
   const updateUserDetail = async (event) => {
     event.preventDefault();
     try {
-      await axios.put(
-        `${BASE_URL}/crm/api/v1/users/${userDetail.userId}`,
-        {
-          userType: userDetail.userType,
-          userStatus: userDetail.userStatus,
-          name: userDetail.name,
-          email: userDetail.email,
-        },
-        {
-          headers: {
-            "x-access-token": localStorage.getItem("token"),
-          },
-        }
-      );
+      await axios.put(`${BASE_URL}/crm/api/v1/users/${userDetail.userId}`, {
+        userType: userDetail.userType,
+        userStatus: userDetail.userStatus,
+        name: userDetail.name,
+        email: userDetail.email,
+      });
       toast.success("User details updated successfully");
       setUserList(
         userList.map((user) =>
@@ -97,12 +84,6 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    if (!localStorage.getItem("token")) {
-      navigate("/");
-    }
-  }, []);
-
-  useEffect(() => {
     if (localStorage.getItem("token")) {
       fetchUsers();
     }
@@ -121,48 +102,11 @@ const Admin = () => {
         <div className="col my-4 ">
           <div className="container">
             <div>
-              <h3 className="text-primary text-center">
-                Welcome, {localStorage.getItem("name")}
-              </h3>
-              <p className="text-muted text-center">
-                Take a quick look at your admin stats below
-              </p>
-
-              <div className="row my-5 mx-2 text-center">
-                <StatusCard
-                  cardColor="warning"
-                  cardText="Open"
-                  cardValue={
-                    ticketList.filter((ticket) => ticket.status === "OPEN")
-                      .length
-                  }
-                />
-                <StatusCard
-                  cardColor="primary"
-                  cardText="In progress"
-                  cardValue={
-                    ticketList.filter(
-                      (ticket) => ticket.status === "IN_PROGRESS"
-                    ).length
-                  }
-                />
-                <StatusCard
-                  cardColor="success"
-                  cardText="Closed"
-                  cardValue={
-                    ticketList.filter((ticket) => ticket.status === "CLOSED")
-                      .length
-                  }
-                />
-                <StatusCard
-                  cardColor="secondary"
-                  cardText="Blocked"
-                  cardValue={
-                    ticketList.filter((ticket) => ticket.status === "BLOCKED")
-                      .length
-                  }
-                />
-              </div>
+              <WelcomeMsg
+                name={localStorage.getItem("name")}
+                userType="admin"
+              />
+              <StatusRow ticketList={ticketList} />
               <hr />
               {isUserListLoading ? (
                 <Loader />
@@ -275,10 +219,3 @@ const Admin = () => {
 };
 
 export default Admin;
-
-// 4. Everything in react is
-// a) Component
-// b) Model
-// c) Method
-// d) Package
-// e) NOTW
