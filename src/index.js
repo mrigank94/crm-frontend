@@ -17,7 +17,9 @@ axios.interceptors.request.use(function (config) {
 });
 
 axios.interceptors.response.use(
-  function (response) {},
+  function (response) {
+    return response;
+  },
   function (error) {
     if (error.response.status === 401) {
       localStorage.clear();

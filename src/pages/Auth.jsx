@@ -52,11 +52,13 @@ const Auth = () => {
     event.preventDefault();
 
     try {
-      const { data } = await axios.post(BASE_URL + "/crm/api/v1/auth/signin", {
+      const response = await axios.post(BASE_URL + "/crm/api/v1/auth/signin", {
         userId: loginFormValues.userId,
         password: loginFormValues.password,
       });
 
+      console.log(response);
+      const data = response.data;
       if (!data.userId && data.message) {
         throw new Error("APPROVAL PENDING");
       }
